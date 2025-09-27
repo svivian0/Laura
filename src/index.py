@@ -3,7 +3,7 @@ import mysql.connector as mconn
 from mysql.connector import Error
 
 app=Flask(__name__)
-##WITHOUT DB
+##Configuring database connection
 dbConfig={
     'host': 'localhost',
     'user': 'root',
@@ -20,34 +20,35 @@ def connect():
         print(f"Error {e}")
         return None
 
-class Laura:
+class Laura: ##Only created to use self
     def __init__(self):
         self.conn=connect()
-    ##GET
+
+    ##GET ROUTE
     @app.route('/login', methods=['GET'])
     def getUser(self):
         users=[]
         if self.conn is None:
-            return jsonify({"Error in connection with database"}), 500
-        cursor=self.conn.cursor(dictionary=True)
+            return jsonify({"Error in connection with database"}), 500 ##MENSAGE IF CONNECTION FAILS
+        cursor=self.conn.cursor(dictionary=True) ##DICTIONARY ORGANIZES THE ITENS
         cursor.execute('select id, nameu, email, passwordu from users')
         users=cursor.fetchall()
         cursor.close
-        return jsonify(users)
+        return jsonify(users) ##JSON WITH ALL USERS
 
 
-    ##POST
+    ##POST ROUTE
     @app.route('/login', methods=['POST'])
     def addUser(self):
         cursor=self.conn.cursor()
         newUser=request.json
-        if not newUser or 'nameu' not in newUser or 'email' not in newUser or 'passwordu' not in newUser:
-            return jsonify({'error'}), 400
+        if not newUser or 'nameu' not in newUser or 'email' not in newUser or 'passwordu' not in newUser: ## VERIFY ALL ITENS IN NEW USER
+            return jsonify({'error'}), 400 ##ERROR IF ONE ITEN IS NONE
         if self.conn is None:
-            return jsonify({'error'}), 400
-        query='insert into users (nameu, email, passwordu) values (%s, %s, %s)'
+            return jsonify({'error'}), 400 ##ERROR IF CONNECTION FAILS
+        query='insert into users (nameu, email, passwordu) values (%s, %s, %s)' ## A DB COMMAND
         date=(newUser['nameu'], newUser['email'], newUser['passwordu'])
-        try:
+        try: ##TRY INSERT NEW USER
             cursor.execute(query, date)
             self.conn.commit
             newId=cursor.lastrowid
@@ -57,9 +58,9 @@ class Laura:
                 'email': newUser['email'],
                 'passwordu': newUser['passwordu']
             }
-            return jsonify(createUser), 201
+            return jsonify(createUser), 201 ##RETURN A JSON WITH ONLY NEW USER, NOT ALL
         except Error as e:
-            return jsonify({"Error", e}), 500
+            return jsonify({"Error", e}), 500 
 
 if __name__=='__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
